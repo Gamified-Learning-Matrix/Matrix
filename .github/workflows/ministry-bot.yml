@@ -1,0 +1,27 @@
+name: Ministry Bot
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled]
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, ready_for_review]
+  issue_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  ministry-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Ministry Router
+        run: |
+          node Ministry/Integration/router.mjs \
+            --event "$GITHUB_EVENT_NAME" \
+            --payload "$GITHUB_EVENT_PATH"

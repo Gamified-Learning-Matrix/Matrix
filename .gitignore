@@ -1,0 +1,7 @@
+# Node / npm
+MinistryPortal/node_modules/
+MinistryPortal/dist/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
