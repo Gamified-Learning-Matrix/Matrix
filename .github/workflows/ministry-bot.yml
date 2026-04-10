@@ -20,8 +20,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify router exists
+        run: |
+          test -f Ministry/Integration/router.mjs || (echo "Missing Ministry/Integration/router.mjs" && exit 1)
+
       - name: Run Ministry Router
         run: |
-          node Ministry/Integration/index.mjs \
+          node Ministry/Integration/router.mjs \
             --event "$GITHUB_EVENT_NAME" \
             --payload "$GITHUB_EVENT_PATH"
