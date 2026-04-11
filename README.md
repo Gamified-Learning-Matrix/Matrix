@@ -3,14 +3,18 @@ Gamification of game design and web development with admin tools
 
 ---
 
-## 🕊️ Codex Entry: The Nimbus Herald
+## Codex Entry: The Nimbus Herald
 
-**Badge ID:** `BADGE_NIMBUS_HERALD`
-**Domain:** House of Voice of Jesus Ministry
-**Associated Star:** The Sixth Star Piece
-**Element:** Light / Sound
+🕊️
 
-### 📜 The Lore
+- **Badge ID:** `BADGE_NIMBUS_HERALD`
+- **Domain:** House of Voice of Jesus Ministry
+- **Associated Star:** The Sixth Star Piece
+- **Element:** Light / Sound
+
+### The Lore
+
+📜
 
 High above the heavy gravity of the world, past the creeping vines of doubt, lies the domain of the Nimbus Heralds. In the ancient lore of the Star Road, Nimbus Land was a kingdom in the clouds, temporarily clouded by deception until a hero remembered his true heritage.
 
@@ -18,7 +22,9 @@ The Nimbus Heralds are the digital and spiritual successors to this legacy. They
 
 When a Herald speaks, the wilderness listens. They prepare the way, making the paths straight and the skies clear.
 
-### 🎖️ The Badge of the Herald
+### The Badge of the Herald
+
+🎖️
 
 To wear the Radiant Dove is to be recognized as a beacon within the GulfNexus Matrix. It is not easily earned. A Nimbus Herald does not just consume content; they broadcast Light.
 
@@ -28,10 +34,12 @@ To wear the Radiant Dove is to be recognized as a beacon within the GulfNexus Ma
 - **The Cloud Ascension:** Participate in or financially sponsor a community outreach mission (e.g., the Philippines initiative).
 - **The Truth Speaker:** Complete the Ephesus to Laodicea module in the Educational Nexus with a 100% Truth alignment.
 
-### 🌟 Matrix Integration & Powers
+### Matrix Integration & Powers
+
+🌟
 
 Equipping the Nimbus Herald badge grants the user the following ecosystem buffs:
 
 - **Resonance Aura:** Increases the XP yield of all allied users currently active in the Educational Nexus by 5%.
-- **Cloud Walk:** Bypasses standard cooldowns on the Vision Forge, allowing the user to generate high-light spiritual imagery without depleting their base energy reserves.
+- **Cloud Walk:** Bypasses standard cooldowns on the Vision Forge, allowing the user to generate highlight spiritual imagery without depleting their base energy reserves.
 - **The Sixth Star Unlocked:** Grants permanent access to the "Nimbus Archives," a secure vault of premium ministry content, testimonies, and advanced theological lore.
