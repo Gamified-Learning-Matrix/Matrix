@@ -19,11 +19,8 @@
   },
   "permissions": [
     "storage",
-    "identity",
     "tabs",
     "webRequest",
-    "declarativeNetRequest",
-    "dns",
     "notifications"
   ],
   "host_permissions": [
