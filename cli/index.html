@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gemini CLI Terminal - Nexus OS secure connection interface">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="theme-color" content="#0d0d1a">
+    <title>Gemini CLI Terminal</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <style>
+        :root {
+            --bg-color: #0d0d1a;
+            --text-color: #00ff41; /* Cyber-green */
+            --font-main: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #terminal-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+        }
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+        .prompt {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        #cli-input {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            flex-grow: 1;
+            outline: none;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+        }
+        .user-cmd { color: #aaa; }
+        .system-response { color: var(--text-color); margin-bottom: 10px; }
+        .error-response { color: #ff3333; margin-bottom: 10px; }
+        .success-response { color: #00ff41; margin-bottom: 10px; }
+        .info-response { color: #00cfff; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="terminal-output">
+        <div>Nexus OS [Version 1.0.2]</div>
+        <div>(c) 2026 Enterprise Architecture. All rights reserved.</div><br>
+        <div>Initializing secure connection to Gemini Proxy...</div><br>
+    </div>
+
+    <div class="input-line">
+        <span class="prompt">admin@nexus:~$</span>
+        <input type="text" id="cli-input" autocomplete="off" autofocus>
+    </div>
+
+    <noscript>
+        <p>This application requires JavaScript to be enabled.</p>
+    </noscript>
+
+    <script>
+        const inputField = document.getElementById('cli-input');
+        const outputDiv = document.getElementById('terminal-output');
+
+        // Replace this with your deployed Google Apps Script Web App URL
+        const APPS_SCRIPT_ENDPOINT = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
+
+        // Built-in commands
+        const COMMANDS = {
+            'help': () => {
+                return `Available Commands:
+  help              - Display this help message
+  clear             - Clear terminal output
+  status            - Check Nexus OS system status
+  version           - Display system version
+  echo <text>       - Echo text to terminal
+  date              - Display current date and time
+  whoami            - Display current user
+  about             - About Nexus OS
+  gemini <prompt>   - Send prompt to Gemini AI
+  exit              - Exit terminal (closes window)`;
+            },
+            'status': () => {
+                return `Nexus OS Status Report:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+System: Operational
+Uptime: 42 days, 13 hours, 29 minutes
+Memory: 2048MB allocated
+CPU: 4 cores @ 2.4GHz
+Connections: 1 active
+Services: Gemini Proxy (active), Star Road (active)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+            },
+            'version': () => {
+                return `Nexus OS Version 1.0.2
+Released: 2026-01-15
+Build: 1234567890
+Architecture: x64-nexus`;
+            },
+            'whoami': () => {
+                return `admin`;
+            },
+            'date': () => {
+                return new Date().toString();
+            },
+            'about': () => {
+                return `Nexus OS - Gamified Learning Matrix Terminal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The Nexus OS CLI Terminal provides secure access to the
+Gamified Learning Matrix ecosystem through Gemini AI integration.
+Part of the Star Road Portal initiative.
+
+Developed by: GulfNexus
+License: CC0 1.0 Universal`;
+            },
+            'exit': () => {
+                window.close();
+                return `Closing terminal...`;
+            }
+        };
+
+        inputField.addEventListener('keydown', async function(e) {
+            if (e.key === 'Enter') {
+                const command = inputField.value.trim();
+                if (!command) return;
+
+                // Print User Command
+                printLine(`admin@nexus:~$ ${command}`, 'user-cmd');
+                inputField.value = '';
+                inputField.disabled = true;
+
+                // Handle clear command locally
+                if (command.toLowerCase() === 'clear') {
+                    outputDiv.innerHTML = '';
+                    inputField.disabled = false;
+                    inputField.focus();
+                    return;
+                }
+
+                // Parse command
+                const [cmd, ...args] = command.split(/\s+/);
+                const cmdLower = cmd.toLowerCase();
+
+                // Check for built-in commands
+                if (COMMANDS[cmdLower]) {
+                    const result = COMMANDS[cmdLower]();
+                    printLine(result, cmdLower === 'error' ? 'error-response' : 'system-response');
+                    inputField.disabled = false;
+                    inputField.focus();
+                    scrollToBottom();
+                    return;
+                }
+
+                // Handle echo command
+                if (cmdLower === 'echo') {
+                    const text = args.join(' ') || '';
+                    printLine(text, 'system-response');
+                    inputField.disabled = false;
+                    inputField.focus();
+                    scrollToBottom();
+                    return;
+                }
+
+                // Handle gemini command
+                if (cmdLower === 'gemini') {
+                    const prompt = args.join(' ');
+                    if (!prompt) {
+                        printLine('Error: gemini command requires a prompt', 'error-response');
+                        inputField.disabled = false;
+                        inputField.focus();
+                        scrollToBottom();
+                        return;
+                    }
+
+                    printLine("Fetching response from Gemini Proxy...", "info-response");
+
+                    try {
+                        // Forward prompt to Google Apps Script Backend
+                        const response = await fetch(APPS_SCRIPT_ENDPOINT, {
+                            method: 'POST',
+                            body: JSON.stringify({ prompt: prompt }),
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        if (!response.ok) throw new Error("Network response was not ok");
+                        
+                        const data = await response.text(); 
+                        // Remove the "Fetching response..." text and print actual result
+                        outputDiv.lastElementChild.remove();
+                        printLine(data, 'system-response');
+
+                    } catch (error) {
+                        outputDiv.lastElementChild.remove();
+                        printLine(`Connection Error: Ensure your Apps Script endpoint is active.\n${error.message}`, 'error-response');
+                    }
+
+                    inputField.disabled = false;
+                    inputField.focus();
+                    scrollToBottom();
+                    return;
+                }
+
+                // Unknown command
+                printLine(`Command not found: ${cmd}. Type 'help' for available commands.`, 'error-response');
+                inputField.disabled = false;
+                inputField.focus();
+                scrollToBottom();
+            }
+        });
+
+        function printLine(text, className) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+            outputDiv.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        // Keep focus on input when clicking anywhere on the background
+        document.addEventListener('click', () => inputField.focus());
+    </script>
+</body>
+</html>
