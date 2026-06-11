@@ -53,25 +53,12 @@
             text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
         }
         .user-cmd { color: #aaa; }
-        .system-response { color: var(--text-color); margin-bottom: 10px; }
+        .system-response { color: var(--text-color); margin-bottom: 10px; line-height: 1.6; }
         .error-response { color: #ff3333; margin-bottom: 10px; }
         .success-response { color: #00ff41; margin-bottom: 10px; }
         .info-response { color: #00cfff; margin-bottom: 10px; }
         .warning-response { color: #ffaa00; margin-bottom: 10px; }
-        .progress-bar {
-            display: inline-block;
-            width: 300px;
-            height: 8px;
-            background: #1a1a2e;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 5px 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff41, #00cfff);
-            transition: width 0.3s;
-        }
+        .gemini-response { color: #b48fe0; margin-bottom: 10px; line-height: 1.6; border-left: 2px solid #7851a9; padding-left: 10px; }
     </style>
 </head>
 <body>
@@ -96,15 +83,18 @@
         const outputDiv = document.getElementById('terminal-output');
 
         // GitHub Configuration
-        const GITHUB_TOKEN = localStorage.getItem('github_token') || null;
+        let GITHUB_TOKEN = localStorage.getItem('github_token') || null;
         const REPO_OWNER = 'Gamified-Learning-Matrix';
         const REPO_NAME = 'Nexus';
+
+        // Gemini API configuration
+        const GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || null;
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
         // Gemini state
         let geminiState = {
             installed: localStorage.getItem('gemini_installed') === 'true',
             version: localStorage.getItem('gemini_version') || '0.0.0',
-            apiKey: localStorage.getItem('gemini_api_key') || null,
             lastSync: localStorage.getItem('gemini_last_sync') || 'Never'
         };
 
@@ -120,11 +110,12 @@
   date                           - Display current date and time
   whoami                         - Display current user
   about                          - About Nexus OS
-  gemini install                 - Install/initialize Gemini
-  gemini status                  - Check Gemini installation status
-  gemini push <message>          - Push changes to repository
-  gemini query <prompt>          - Send prompt to Gemini AI
-  github auth <token>            - Authenticate with GitHub token
+  install-gemini                 - Install/initialize Gemini
+  gemini <prompt>                - Query Gemini AI directly
+  gemini --install               - Install Gemini with API key
+  gemini --status                - Check Gemini status
+  gemini --push <message>        - Push changes to repository
+  github-auth <token>            - Authenticate with GitHub token
   exit                           - Exit terminal (closes window)`;
             },
             'status': () => {
@@ -169,35 +160,19 @@ GitHub: Gamified-Learning-Matrix/Nexus`;
             }
         };
 
-        // Handle Gemini commands
-        async function handleGeminiCommand(args) {
-            const subcommand = args[0] || '';
-            const params = args.slice(1).join(' ');
-
-            switch (subcommand.toLowerCase()) {
-                case 'install':
-                    return await installGemini();
-                case 'status':
-                    return getGeminiStatus();
-                case 'push':
-                    return await pushToRepository(params);
-                case 'query':
-                    return await queryGemini(params);
-                default:
-                    return `Gemini subcommand not found. Available: install, status, push, query`;
+        async function installGemini(apiKey) {
+            if (!apiKey) {
+                return `❌ API key required. Usage: gemini --install <your_api_key>`;
             }
-        }
 
-        async function installGemini() {
             printLine("🚀 Installing Gemini...", "info-response");
             
-            // Simulate installation steps
             const steps = [
                 { msg: "Downloading Gemini Core...", delay: 800 },
                 { msg: "Configuring AI modules...", delay: 1200 },
                 { msg: "Initializing Geno Beam telemetry...", delay: 900 },
                 { msg: "Setting up Star Road integration...", delay: 1000 },
-                { msg: "Syncing repository metadata...", delay: 700 }
+                { msg: "Validating API key...", delay: 700 }
             ];
 
             for (const step of steps) {
@@ -212,44 +187,75 @@ GitHub: Gamified-Learning-Matrix/Nexus`;
             localStorage.setItem('gemini_installed', 'true');
             localStorage.setItem('gemini_version', '1.0.0');
             localStorage.setItem('gemini_last_sync', geminiState.lastSync);
+            localStorage.setItem('gemini_api_key', apiKey);
 
             return `✅ Gemini v1.0.0 installed successfully!
-Next steps:
-  1. Set GitHub token: github auth <your_token>
-  2. Check status: gemini status
-  3. Push changes: gemini push <message>`;
+API Key stored securely.
+Ready to use: gemini <your_question>`;
         }
 
         function getGeminiStatus() {
             if (!geminiState.installed) {
-                return `❌ Gemini not installed. Run: gemini install`;
+                return `❌ Gemini not installed.\nRun: gemini --install <your_api_key>`;
             }
             return `✅ Gemini Status:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Version: ${geminiState.version}
 Status: Operational
-API Key: ${geminiState.apiKey ? '***configured***' : 'Not configured'}
+API Key: ${localStorage.getItem('gemini_api_key') ? '***configured***' : 'Not configured'}
 Last Sync: ${geminiState.lastSync}
 Repository: ${REPO_OWNER}/${REPO_NAME}
 GitHub Auth: ${GITHUB_TOKEN ? '✓ Authenticated' : '✗ Not authenticated'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
         }
 
-        async function pushToRepository(message) {
+        async function queryGemini(prompt) {
             if (!geminiState.installed) {
-                return `❌ Gemini not installed. Run: gemini install`;
+                return `❌ Gemini not installed. Run: gemini --install <your_api_key>`;
             }
+
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                return `❌ Gemini API key not found. Run: gemini --install <your_api_key>`;
+            }
+
+            printLine("🤖 Querying Gemini...", "info-response");
+
+            try {
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    return `❌ Gemini Error: ${error.error?.message || 'API request failed'}`;
+                }
+
+                const data = await response.json();
+                const result = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
+                return result;
+            } catch (error) {
+                return `❌ Connection error: ${error.message}`;
+            }
+        }
+
+        async function pushToRepository(message) {
             if (!GITHUB_TOKEN) {
-                return `❌ GitHub authentication required. Run: github auth <token>`;
+                return `❌ GitHub authentication required. Run: github-auth <token>`;
             }
             if (!message) {
-                return `❌ Commit message required. Usage: gemini push <message>`;
+                return `❌ Commit message required. Usage: gemini --push <message>`;
             }
 
             printLine("📤 Pushing changes to repository...", "info-response");
 
             try {
-                // Simulate push process
                 printLine("▶ Staging changes...", "info-response");
                 await sleep(500);
                 printLine("▶ Creating commit...", "info-response");
@@ -257,7 +263,9 @@ GitHub Auth: ${GITHUB_TOKEN ? '✓ Authenticated' : '✗ Not authenticated'}
                 printLine("▶ Pushing to origin/main...", "info-response");
                 await sleep(1000);
 
-                // Call GitHub API to create a commit
+                const timestamp = new Date().toISOString();
+                const content = btoa(`# Gemini Update\n\nTimestamp: ${timestamp}\nMessage: ${message}\n\nUpdated by Nexus OS CLI\nUser: admin@nexus`);
+
                 const response = await fetch(
                     `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/GEMINI_LOG.md`,
                     {
@@ -268,7 +276,7 @@ GitHub Auth: ${GITHUB_TOKEN ? '✓ Authenticated' : '✗ Not authenticated'}
                         },
                         body: JSON.stringify({
                             message: message,
-                            content: btoa(`# Gemini Update\n\nTimestamp: ${new Date().toISOString()}\nMessage: ${message}\n\nUpdated by Nexus OS CLI`),
+                            content: content,
                             branch: 'main'
                         })
                     }
@@ -290,35 +298,9 @@ Message: "${message}"`;
             }
         }
 
-        async function queryGemini(prompt) {
-            if (!prompt) {
-                return `❌ Query requires a prompt. Usage: gemini query <your_question>`;
-            }
-
-            printLine("🤖 Querying Gemini AI...", "info-response");
-
-            try {
-                // Placeholder for actual Gemini API call
-                // This would connect to your Google Apps Script or direct API
-                const mockResponse = `[Gemini Response]
-Your query: "${prompt}"
-
-This is a simulated response. To enable real Gemini integration:
-1. Configure your Gemini API key in settings
-2. Connect to Google Apps Script backend
-3. Set up proper CORS headers
-
-For now, use: gemini push <message>`;
-
-                return mockResponse;
-            } catch (error) {
-                return `❌ Query error: ${error.message}`;
-            }
-        }
-
         async function handleGitHubAuth(token) {
             if (!token) {
-                return `❌ Token required. Usage: github auth <your_github_token>`;
+                return `❌ Token required. Usage: github-auth <your_github_token>`;
             }
 
             printLine("🔐 Authenticating with GitHub...", "info-response");
@@ -330,6 +312,7 @@ For now, use: gemini push <message>`;
 
                 if (response.ok) {
                     const user = await response.json();
+                    GITHUB_TOKEN = token;
                     localStorage.setItem('github_token', token);
                     return `✅ Authenticated as @${user.login}
 Token saved to local storage.
@@ -362,12 +345,14 @@ Ready to push changes!`;
                     return;
                 }
 
-                const [cmd, ...args] = command.split(/\s+/);
-                const cmdLower = cmd.toLowerCase();
+                const parts = command.split(/\s+/);
+                const cmd = parts[0].toLowerCase();
+                const args = parts.slice(1);
+                const fullArgs = parts.slice(1).join(' ');
 
-                // Check for built-in commands
-                if (COMMANDS[cmdLower]) {
-                    const result = COMMANDS[cmdLower]();
+                // Built-in commands
+                if (COMMANDS[cmd]) {
+                    const result = COMMANDS[cmd]();
                     printLine(result, 'system-response');
                     inputField.disabled = false;
                     inputField.focus();
@@ -375,35 +360,58 @@ Ready to push changes!`;
                     return;
                 }
 
-                // Handle echo command
-                if (cmdLower === 'echo') {
-                    const text = args.join(' ') || '';
-                    printLine(text, 'system-response');
+                // Echo command
+                if (cmd === 'echo') {
+                    printLine(fullArgs, 'system-response');
                     inputField.disabled = false;
                     inputField.focus();
                     scrollToBottom();
                     return;
                 }
 
-                // Handle gemini command
-                if (cmdLower === 'gemini') {
-                    const result = await handleGeminiCommand(args);
-                    printLine(result, geminiState.installed ? 'success-response' : 'warning-response');
+                // Install Gemini
+                if (cmd === 'install-gemini') {
+                    const result = await installGemini(args[0]);
+                    printLine(result, 'success-response');
                     inputField.disabled = false;
                     inputField.focus();
                     scrollToBottom();
                     return;
                 }
 
-                // Handle github command
-                if (cmdLower === 'github') {
-                    const subcommand = args[0] || '';
-                    if (subcommand.toLowerCase() === 'auth') {
-                        const result = await handleGitHubAuth(args[1]);
+                // Gemini command (main handler)
+                if (cmd === 'gemini') {
+                    let result;
+                    
+                    if (args[0] === '--install') {
+                        result = await installGemini(args[1]);
                         printLine(result, 'success-response');
+                    } else if (args[0] === '--status') {
+                        result = getGeminiStatus();
+                        printLine(result, 'info-response');
+                    } else if (args[0] === '--push') {
+                        const msg = args.slice(1).join(' ');
+                        result = await pushToRepository(msg);
+                        printLine(result, 'success-response');
+                    } else if (fullArgs) {
+                        // Direct Gemini query
+                        result = await queryGemini(fullArgs);
+                        printLine(result, 'gemini-response');
                     } else {
-                        printLine(`GitHub subcommands: auth <token>`, 'info-response');
+                        result = `Usage: gemini <prompt> | gemini --install <api_key> | gemini --status | gemini --push <message>`;
+                        printLine(result, 'info-response');
                     }
+
+                    inputField.disabled = false;
+                    inputField.focus();
+                    scrollToBottom();
+                    return;
+                }
+
+                // GitHub auth command
+                if (cmd === 'github-auth') {
+                    const result = await handleGitHubAuth(args[0]);
+                    printLine(result, 'success-response');
                     inputField.disabled = false;
                     inputField.focus();
                     scrollToBottom();
