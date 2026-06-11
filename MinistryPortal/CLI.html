@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini CLI Terminal</title>
+    <style>
+        :root {
+            --bg-color: #0d0d1a;
+            --text-color: #00ff41; /* Cyber-green */
+            --font-main: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #terminal-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+        }
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+        .prompt {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        #cli-input {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            flex-grow: 1;
+            outline: none;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+        }
+        .user-cmd { color: #aaa; }
+        .system-response { color: var(--text-color); margin-bottom: 10px; }
+        .error-response { color: #ff3333; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="terminal-output">
+        <div>Nexus OS [Version 1.0.2]</div>
+        <div>(c) 2026 Enterprise Architecture. All rights reserved.</div><br>
+        <div>Initializing secure connection to Gemini Proxy...</div><br>
+    </div>
+
+    <div class="input-line">
+        <span class="prompt">admin@nexus:~$</span>
+        <input type="text" id="cli-input" autocomplete="off" autofocus>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('cli-input');
+        const outputDiv = document.getElementById('terminal-output');
+
+        // Replace this with your deployed Google Apps Script Web App URL
+        const APPS_SCRIPT_ENDPOINT = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; 
+
+        inputField.addEventListener('keydown', async function(e) {
+            if (e.key === 'Enter') {
+                const command = inputField.value.trim();
+                if (!command) return;
+
+                // Print User Command
+                printLine(`admin@nexus:~$ ${command}`, 'user-cmd');
+                inputField.value = '';
+                inputField.disabled = true;
+
+                // Handle clear command locally
+                if (command.toLowerCase() === 'clear') {
+                    outputDiv.innerHTML = '';
+                    inputField.disabled = false;
+                    inputField.focus();
+                    return;
+                }
+
+                printLine("Fetching response...", "user-cmd");
+
+                try {
+                    // Forward prompt to Google Apps Script Backend
+                    const response = await fetch(APPS_SCRIPT_ENDPOINT, {
+                        method: 'POST',
+                        body: JSON.stringify({ prompt: command }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    
+                    const data = await response.text(); 
+                    // Remove the "Fetching response..." text and print actual result
+                    outputDiv.lastElementChild.remove();
+                    printLine(data, 'system-response');
+
+                } catch (error) {
+                    outputDiv.lastElementChild.remove();
+                    printLine(`Connection Error: Ensure your Apps Script endpoint is active. (${error.message})`, 'error-response');
+                }
+
+                inputField.disabled = false;
+                inputField.focus();
+                scrollToBottom();
+            }
+        });
+
+        function printLine(text, className) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+            outputDiv.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        // Keep focus on input when clicking anywhere on the background
+        document.addEventListener('click', () => inputField.focus());
+    </script>
+</body>
+</html>
