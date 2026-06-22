@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VAULT-TEC DEFENSE SUITE v1.0</title>
+    <style>
+        :root {
+            --pip-amber: #ffb000;
+            --pip-dim: #9c6b00;
+            --pip-bg: #110a00;
+            --pip-crt: rgba(255, 176, 0, 0.03);
+        }
+
+        body {
+            background-color: var(--pip-bg);
+            color: var(--pip-amber);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(var(--pip-crt) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 1000;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            border: 2px solid var(--pip-amber);
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(255, 176, 0, 0.2);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--pip-amber);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        /* Grid System */
+        .grid-container {
+            background: #1a1000;
+            border: 1px solid var(--pip-amber);
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            padding: 5px;
+            aspect-ratio: 16/9;
+        }
+
+        .cell {
+            background: var(--pip-bg);
+            border: 1px solid var(--pip-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cell:hover {
+            background: rgba(255, 176, 0, 0.1);
+        }
+
+        .cell.path {
+            background: #2a1b00;
+            border: 1px dashed var(--pip-dim);
+        }
+
+        /* Puzzle Panel */
+        .puzzle-panel {
+            border: 1px solid var(--pip-amber);
+            padding: 15px;
+            background: rgba(255, 176, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .puzzle-screen {
+            background: #080500;
+            border: 1px solid var(--pip-dim);
+            padding: 10px;
+            flex-grow: 1;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            overflow-y: auto;
+            max-height: 250px;
+        }
+
+        .word-option {
+            cursor: pointer;
+            display: block;
+            padding: 2px 5px;
+        }
+
+        .word-option:hover {
+            background: var(--pip-amber);
+            color: var(--pip-bg);
+        }
+
+        /* Shop / Control Panel */
+        .shop-panel {
+            margin-top: 20px;
+            border-top: 2px solid var(--pip-amber);
+            padding-top: 15px;
+        }
+
+        .shop-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .tower-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .tower-card {
+            border: 1px solid var(--pip-dim);
+            padding: 10px;
+            cursor: pointer;
+            background: var(--pip-bg);
+        }
+
+        .tower-card:hover, .tower-card.selected {
+            border-color: var(--pip-amber);
+            background: rgba(255, 176, 0, 0.1);
+        }
+
+        button {
+            background: var(--pip-amber);
+            color: var(--pip-bg);
+            border: none;
+            padding: 10px 20px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .log-text {
+            color: var(--pip-dim);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>CAPS: <span id="caps-display">740</span></div>
+        <div>RAD-RESIST: <span id="health-display">20</span></div>
+        <div>WAVE: <span id="wave-display">24</span></div>
+        <button id="start-wave-btn" onclick="startWave()">Initiate Protocol</button>
+    </header>
+
+    <div class="main-layout">
+        <!-- Tower Defense Grid Field -->
+        <div>
+            <div class="grid-container" id="game-grid"></div>
+            
+            <div class="shop-panel">
+                <div class="shop-title">CONSTRUCTION MATRICES (SELECT TOWER)</div>
+                <div class="tower-list">
+                    <div class="tower-card selected" onclick="selectTower('Laser', 45)" id="card-Laser">
+                        <strong>Laser Turret</strong><br>Cost: 45 Caps<br><small>Rng: Med | Basic Beam</small>
+                    </div>
+                    <div class="tower-card" onclick="selectTower('Plasma', 180)" id="card-Plasma">
+                        <strong>Plasma Caster</strong><br>Cost: 180 Caps<br><small>Rng: Med | Splash Meltdown</small>
+                    </div>
+                    <div class="tower-card" onclick="selectTower('Tesla', 270)" id="card-Tesla">
+                        <strong>Tesla Coil</strong><br>Cost: 270 Caps<br><small>Rng: Short | Chain Arcing</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Mini-Game / Hacking Puzzle -->
+        <div class="puzzle-panel">
+            <div style="font-weight: bold; margin-bottom: 10px;">ROUTING TERMINAL V2.4</div>
+            <div class="puzzle-screen" id="terminal-screen">
+                <!-- Hacking content loaded by script -->
+            </div>
+            <div id="puzzle-status" style="font-size: 0.8rem; min-height: 35px;">Find password passphrase to bypass grid lockouts & earn 150 Caps.</div>
+            <button onclick="resetHackingPuzzle()" style="margin-top: auto; padding: 5px 10px; font-size: 0.8rem;">Reset Terminal</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game State Variables
+    let caps = 740;
+    let integrity = 20;
+    let wave = 24;
+    let selectedTower = 'Laser';
+    let selectedCost = 45;
+
+    // Grid Dimensions
+    const rows = 6;
+    const cols = 10;
+    
+    // Simple path array indices (row * cols + col) to emulate a winding defensive road
+    const pathIndices =;
+
+    // Password Hacking Config
+    const wordsList = ["OVERSEER", "RADIATION", "MUTATION", "WASTELAND", "FALLOUT", "VAULTTEC"];
+    let secretWord = "";
+
+    // Initialize Game Engine Layout
+    function initGame() {
+        const grid = document.getElementById('game-grid');
+        grid.innerHTML = '';
+        
+        for (let i = 0; i < rows * cols; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            
+            // Differentiate road path from buildable grid space
+            if (pathIndices.includes(i)) {
+                cell.classList.add('path');
+                cell.innerText = '░';
+            } else {
+                cell.onclick = () => placeTower(cell);
+            }
+            grid.appendChild(cell);
+        }
+        resetHackingPuzzle();
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('caps-display').innerText = caps;
+        document.getElementById('health-display').innerText = integrity;
+        document.getElementById('wave-display').innerText = wave;
+    }
+
+    // Select Tower Type from bottom shop matrix
+    function selectTower(type, cost) {
+        document.querySelectorAll('.tower-card').forEach(card => card.classList.remove('selected'));
+        selectedTower = type;
+        selectedCost = cost;
+        document.getElementById(`card-${type}`).classList.add('selected');
+    }
+
+    // Place Defense Units onto the Map
+    function placeTower(cell) {
+        if (cell.innerText !== '') {
+            // Already contains an element, execute upgrade logic rule
+            cell.innerText += '+';
+            caps -= Math.floor(selectedCost * 0.6);
+            updateUI();
+            return;
+        }
+
+        if (caps >= selectedCost) {
+            caps -= selectedCost;
+            cell.innerText = selectedTower.substring(0, 2).toUpperCase();
+            cell.style.color = '#fff';
+            updateUI();
+        } else {
+            alert("INSUFFICIENT FUNDS: ACQUIRE MORE CAPS COINS.");
+        }
+    }
+
+    // Simulate standard cycle wave progression
+    function startWave() {
+        wave++;
+        // Minor integrity damage to show interactive mechanics loop
+        if(integrity > 1) integrity -= 1; 
+        caps += 120; // Resource return payout
+        updateUI();
+        alert(`WAVE ${wave} ENEMY INBOUND. DEFENSE GRID ACTIVE.`);
+    }
+
+    // Fallout Hacking Logic Mini-game
+    function resetHackingPuzzle() {
+        const screen = document.getElementById('terminal-screen');
+        const status = document.getElementById('puzzle-status');
+        screen.innerHTML = "ROUTING BYPASS ATTEMPT...<br><br>";
+        status.innerText = "Select password entry passphrase to unlock bonus buffer.";
+        
+        // Randomly pick a win condition target keyword
+        secretWord = wordsList[Math.floor(Math.random() * wordsList.length)];
+
+        wordsList.forEach(word => {
+            const span = document.createElement('span');
