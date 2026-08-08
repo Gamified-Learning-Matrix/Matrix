@@ -23,6 +23,14 @@ jobs:
 
       - name: Run Ministry Router
         run: |
-          node Ministry/Integration/index.mjs \
+          ROUTER_PATH="$(find . -type f -path '*/Integration/router.mjs' | head -n 1)"
+
+          if [ -z "$ROUTER_PATH" ]; then
+            echo "Unable to find Integration/router.mjs in the checked-out repository." >&2
+            echo "Either commit the Ministry bot sources to this repository, adjust the workflow to the correct path, or add a fetch step before running the router." >&2
+            exit 1
+          fi
+
+          node "$ROUTER_PATH" \
             --event "$GITHUB_EVENT_NAME" \
             --payload "$GITHUB_EVENT_PATH"
